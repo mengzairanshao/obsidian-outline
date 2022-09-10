@@ -66,6 +66,13 @@ let container =compomentSelf .appContext.config.globalProperties.container as HT
 // register scroll event
 onMounted(() => {
     document.addEventListener("scroll", handleScroll, true)
+	store.plugin.registerMarkdownPostProcessor(async (el, ctx)=> {
+		let ele = el.findAll("h1,h2,h3,h4,h5,h6");
+		ele.forEach((value, index, array)=>{
+			let head = store.line2HeaderNumMap.line2HeaderNumMap.get(ctx.getSectionInfo(value).lineStart);
+			if (head) value.setText(head + value.getText());
+		})
+	});
 })
 
 onUnmounted(() => {
@@ -192,7 +199,7 @@ watch(
         if (old_level === level.value) {
             switchLevel(level.value)
         }
-        
+
         nextTick(() => {
             pattern.value = old_pattern
         })
@@ -241,7 +248,7 @@ function simpleFilter(pattern: string, option: TreeOption) : boolean {
 
 let filter = computed(() => {
     return store.plugin.settings.regex_search ? regexFilter: simpleFilter
-}) 
+})
 
 let matchCount = computed(() => {
     return store.headers.filter((h) => {
@@ -291,12 +298,24 @@ function makeTree(headers: HeadingCache[]): TreeOption[] {
 function arrToTree(headers: HeadingCache[]): TreeOption[] {
     const root: TreeOption = { children: [] }
     const stack = [{ node: root, level: -1 }]
+    const headCount = [0,0,0,0,0,0]
 
     headers.forEach((h, i) => {
+		headCount[h.level - 1] += 1;
+		let headingStr = ""
+		headCount.forEach((v,j)=>{
+			if (j>=h.level) {
+				headCount[j] = 0;
+			} else {
+				headingStr += headCount[j] + "."
+			}
+		});
+		store.line2HeaderNumMap.line2HeaderNumMap.set(h.position.start.line, headingStr);
         let node: TreeOption = {
-            label: h.heading,
+            label: headingStr + " " + h.heading,
             key: "item-" + h.level + "-" + i,
             line: h.position.start.line,
+			headStr: headingStr,
         }
 
         while (h.level <= stack.last().level) {
@@ -361,9 +380,9 @@ function reset() {
 //             })
 //         }
 //     })
-    
+
 //     let mdView = plugin.app.workspace.getActiveViewOfType(MarkdownView)
-    
+
 //     if(mdView && plugin.settings.sync_with_markdown === "bidirectional") {
 //         (mdView.currentMode as any).applyFoldInfo({
 //             folds,

@@ -9,6 +9,7 @@ import { OutlineView, VIEW_TYPE } from './view'
 import { store } from './store'
 
 import { SettingTab, QuietOutlineSettings, DEFAULT_SETTINGS } from "./settings"
+import {headerReNumPlugin} from "./renumber"
 
 
 export class QuietOutline extends Plugin {
@@ -18,14 +19,16 @@ export class QuietOutline extends Plugin {
 	async onload() {
 		await this.loadSettings()
 
+		store.init();
 		store.plugin = this
 		store.dark = document.querySelector('body').classList.contains('theme-dark')
-
+		
 		this.registerView(
 			VIEW_TYPE,
 			(leaf) => new OutlineView(leaf, this)
 		)
 
+		this.registerEditorExtension(headerReNumPlugin);
 
 		// for test
 		// this.addRibbonIcon('bot', 'test something', (evt) => {
@@ -84,6 +87,7 @@ export class QuietOutline extends Plugin {
 		}))
 
 		// sync with markdown
+		this.activateView();
 	}
 
 	onunload() {
