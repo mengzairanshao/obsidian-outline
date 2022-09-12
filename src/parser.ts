@@ -68,6 +68,50 @@ export const remove_href = (token:marked.Token) => {
     }
 }
 
+export const highlight: Extension = {
+    name: "highlight",
+    level: "inline",
+    start(src) {
+        return src.match(/\=\=/)?.index
+    },
+    tokenizer(src, tokens) {
+        const rule = /^\={2}(.*)\={2}/
+        const match = rule.exec(src)
+        if(match) {
+            return {
+                type: 'highlight',
+                raw: match[0],
+                content: match[1].trim(),
+            }
+        }
+    },
+    renderer(token) {
+        return `<span style="color:red">${token.content}</span>`
+    }
+}
+
+export const highlightStar: Extension = {
+    name: "highlightStar",
+    level: "inline",
+    start(src) {
+        return src.match(/\*{2}/)?.index
+    },
+    tokenizer(src, tokens) {
+        const rule = /^\*{2}(.*)\*{2}/
+        const match = rule.exec(src)
+        if(match) {
+            return {
+                type: 'highlightStar',
+                raw: match[0],
+                content: match[1].trim(),
+            }
+        }
+    },
+    renderer(token) {
+        return `<span style="color:red">${token.content}</span>`
+    }
+}
+
 
 // remove <ol>
 export const renderer = {

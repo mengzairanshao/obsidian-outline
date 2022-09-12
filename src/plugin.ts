@@ -3,6 +3,7 @@ import {
 	MarkdownView,
 	Notice,
 	Plugin,
+	TFile,
 } from 'obsidian'
 
 import { OutlineView, VIEW_TYPE } from './view'
@@ -10,6 +11,7 @@ import { store } from './store'
 
 import { SettingTab, QuietOutlineSettings, DEFAULT_SETTINGS } from "./settings"
 import {headerReNumPlugin} from "./renumber"
+import { arrToTree } from './util'
 
 
 export class QuietOutline extends Plugin {
@@ -75,6 +77,7 @@ export class QuietOutline extends Plugin {
 		}))
 
 		this.registerEvent(this.app.workspace.on('active-leaf-change', async (leaf) => {
+			console.log("active-leaf-change")
 
 			let view = this.app.workspace.getActiveViewOfType(MarkdownView)
 			if (view) {
@@ -86,8 +89,10 @@ export class QuietOutline extends Plugin {
 			}
 		}))
 
+		this.app.workspace.onLayoutReady(()=>{
+			this.activateView();
+		})
 		// sync with markdown
-		this.activateView();
 	}
 
 	onunload() {

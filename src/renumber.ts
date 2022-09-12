@@ -9,7 +9,7 @@ import {
 	ViewUpdate, WidgetType,
 } from "@codemirror/view";
 import {SyntaxNodeRef} from "@lezer/common";
-import {editorEditorField, editorViewField, MarkdownView} from "obsidian";
+import {editorViewField} from "obsidian";
 import { store } from './store'
 
 class HeaderReNumPlugin implements PluginValue {

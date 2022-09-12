@@ -31,9 +31,10 @@ import { Icon } from '@vicons/utils'
 import { SettingsBackupRestoreRound } from '@vicons/material'
 import { marked } from 'marked'
 
-import { formula, internal_link, remove_href, renderer } from './parser'
+import { formula, internal_link, remove_href, renderer, highlight, highlightStar } from './parser'
 import { store } from './store'
 import { QuietOutline } from "./plugin"
+import {arrToTree} from "./util"
 
 // for test
 // let n = ref(0)
@@ -61,7 +62,7 @@ onUnmounted(() => {
 
 let compomentSelf = getCurrentInstance()
 let plugin = compomentSelf.appContext.config.globalProperties.plugin as QuietOutline
-let container =compomentSelf .appContext.config.globalProperties.container as HTMLElement
+let container =compomentSelf.appContext.config.globalProperties.container as HTMLElement
 
 // register scroll event
 onMounted(() => {
@@ -299,47 +300,9 @@ function makeTree(headers: HeadingCache[]): TreeOption[] {
     return tree
 }
 
-function arrToTree(headers: HeadingCache[]): TreeOption[] {
-    const root: TreeOption = { children: [] }
-    const stack = [{ node: root, level: -1 }]
-    const headCount = [0,0,0,0,0,0]
-
-    headers.forEach((h, i) => {
-		headCount[h.level - 1] += 1;
-		let headingStr = ""
-		headCount.forEach((v,j)=>{
-			if (j>=h.level) {
-				headCount[j] = 0;
-			} else {
-				headingStr += headCount[j] + "."
-			}
-		});
-		store.line2HeaderNumMap.line2HeaderNumMap.set(h.position.start.line, headingStr);
-        let node: TreeOption = {
-            label: headingStr + " " + h.heading,
-            key: "item-" + h.level + "-" + i,
-            line: h.position.start.line,
-			headStr: headingStr,
-        }
-
-        while (h.level <= stack.last().level) {
-            stack.pop()
-        }
-
-        let parent = stack.last().node
-        if (parent.children === undefined) {
-            parent.children = []
-        }
-        parent.children.push(node)
-        stack.push({ node, level: h.level })
-    })
-
-    return root.children
-}
-
 
 // render markdown
-marked.use({ extensions: [formula, internal_link] })
+marked.use({ extensions: [formula, internal_link, highlight, highlightStar] })
 marked.use({ walkTokens: remove_href })
 marked.use({ renderer })
 
