@@ -96,7 +96,11 @@ function _handleScroll(evt: Event) {
     let current_heading = null;
 
     let i = store.headers.length
+    let should_expand = [];
     while (--i >= 0) {
+        if (store.headers[i].level < level.value + 1) {
+            should_expand.push(toKey(store.headers[i], i))
+        }
         if (store.headers[i].position.start.line <= current_line) {
             current_heading = store.headers[i]
             break
@@ -109,17 +113,17 @@ function _handleScroll(evt: Event) {
     let index = i
 
     if (store.plugin.settings.auto_expand) {
-        let should_expand = index < store.headers.length - 1 && store.headers[index].level < store.headers[index + 1].level
-            ? [toKey(current_heading, index)]
-            : []
+        if (index < store.headers.length - 1 && store.headers[index].level < store.headers[index + 1].level) {
+            should_expand.push(toKey(current_heading, index));
+        }
 
-        let level = current_heading.level
+        let level_tmp = current_heading.level
         while (i-- > 0) {
-            if (store.headers[i].level < level) {
+            if (store.headers[i].level < level_tmp || store.headers[i].level <= level.value + 1) {
                 should_expand.push(toKey(store.headers[i], i))
-                level = store.headers[i].level
+                level_tmp = store.headers[i].level
             }
-            if (level === 1) {
+            if (level.value === 0 && level_tmp === 1) {
                 break
             }
         }
