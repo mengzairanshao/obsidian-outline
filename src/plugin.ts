@@ -25,6 +25,11 @@ export class QuietOutline extends Plugin {
 		store.plugin = this
 		store.dark = document.querySelector('body').classList.contains('theme-dark')
 		
+		const current_file = this.app.workspace.getActiveFile()
+		if (store.line2HeaderNumMap?.line2HeaderNumMap?.size === 0 && current_file) {
+			arrToTree(this.app.metadataCache.getFileCache(current_file).headings);
+		}
+
 		this.registerView(
 			VIEW_TYPE,
 			(leaf) => new OutlineView(leaf, this)
@@ -51,6 +56,14 @@ export class QuietOutline extends Plugin {
 			name: "Reset expanding level",
 			callback: () => {
 				dispatchEvent(new CustomEvent("quiet-outline-reset"))
+			}
+		})
+
+		this.addCommand({
+			id: "quiet-outline-reset",
+			name: "remove all headers",
+			callback: () => {
+				this.removeAllHeadersNumber();
 			}
 		})
 
@@ -93,6 +106,13 @@ export class QuietOutline extends Plugin {
 			this.activateView();
 		})
 		// sync with markdown
+	}
+
+	async removeAllHeadersNumber(){
+		let content = await this.app.vault.read(this.app.workspace.getActiveFile());
+		content = content.replace(/^ *(#+ ) *(\d+\.)*\d* */gm, "$1");
+		await this.app.vault.modify(this.app.workspace.getActiveFile(), content);
+		new Notice("remove headers number finished");
 	}
 
 	onunload() {

@@ -11,6 +11,7 @@ import {
 import {SyntaxNodeRef} from "@lezer/common";
 import {editorViewField} from "obsidian";
 import { store } from './store'
+import { arrToTree, calcHeaderStr, getNearestHeader } from "./util";
 
 class HeaderReNumPlugin implements PluginValue {
 	decorations: DecorationSet;
@@ -27,32 +28,46 @@ class HeaderReNumPlugin implements PluginValue {
 
 	buildDecorations(view: EditorView): DecorationSet {
 		const builder = new RangeSetBuilder<Decoration>();
+		let header = [0,0,0,0,0,0];
+		let lastLine = -1;
+		const editor = view.state.field(editorViewField)?.editor;
+		if (!editor) return builder.finish();
+		const firstLineInView = editor.offsetToPos(view.viewport.from).line;
+		const firstHeaderInView = getNearestHeader(firstLineInView);
+		firstHeaderInView?.split(".").filter(e => e).map((e, i) => {
+			header[i] = +e;
+		});
 		for (let { from, to } of view.visibleRanges) {
 			syntaxTree(view.state).iterate({
 				from,
 				to,
 				enter(node :SyntaxNodeRef) {
-					if (node.type.name.startsWith("header")) {
-						// Position of the '-' or the '*'.
-						const listCharFrom = node.from;
-						let editor = view.state.field(editorViewField)?.editor;
-						if (!editor) return;
-						let pos = editor.offsetToPos(listCharFrom);
-						let lineStartContent = editor.getLine(pos.line).substring(0, pos.ch).trimEnd();
-						if(/^#{1,}$/gm.test(lineStartContent) && store.line2HeaderNumMap?.line2HeaderNumMap?.get(pos.line)) {
-							builder.add(
-								listCharFrom,
-								listCharFrom,
-								Decoration.widget({
-									widget: new headerNum(store.line2HeaderNumMap?.line2HeaderNumMap.get(pos.line) + " "),
-								})
-							);
-						}
+					if (node.type.name.startsWith("header_header")) {
+						const pos = editor.offsetToPos(node.from);
+						if (lastLine === pos.line) return;
+						lastLine = pos.line
+						const currentLevel = +node.type.name.substring("header_header-".length, "header_header-".length + 1)
+						header[currentLevel - 1] += 1;
+						const headerStr = calcHeaderStr(header, currentLevel);
+						let headerEndPos = editor.getLine(pos.line).match(/^#+\s/gm)?.at(0).length;
+						builder.add(
+							editor.posToOffset({
+								line: pos.line,
+								ch: headerEndPos
+							}),
+							editor.posToOffset({
+								line: pos.line,
+								ch: headerEndPos
+							}),
+							Decoration.widget({
+								widget: new headerNum(headerStr),
+							})
+						);
+						
 					}
 				},
 			});
 		}
-
 		return builder.finish();
 	}
 
@@ -68,8 +83,14 @@ class headerNum extends WidgetType {
 	}
 	toDOM(view: EditorView): HTMLElement {
 		let div = document.createElement("span");
+		div.className = "plugin-outline-heading";
 		div.setText(this.headerNumStr);
 		return div;
+	}
+
+	updateDOM(dom: HTMLElement): boolean {
+		dom.setText(this.headerNumStr);
+		return true;
 	}
 }
 const pluginSpec: PluginSpec<HeaderReNumPlugin> = {

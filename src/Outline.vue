@@ -31,7 +31,7 @@ import { Icon } from '@vicons/utils'
 import { SettingsBackupRestoreRound } from '@vicons/material'
 import { marked } from 'marked'
 
-import { formula, internal_link, remove_href, renderer, highlight, highlightStar } from './parser'
+import { formula, internal_link, remove_href, renderer, highlight } from './parser'
 import { store } from './store'
 import { QuietOutline } from "./plugin"
 import {arrToTree} from "./util"
@@ -302,7 +302,7 @@ function makeTree(headers: HeadingCache[]): TreeOption[] {
 
 
 // render markdown
-marked.use({ extensions: [formula, internal_link, highlight, highlightStar] })
+marked.use({ extensions: [formula, internal_link, highlight] })
 marked.use({ walkTokens: remove_href })
 marked.use({ renderer })
 
