@@ -4,6 +4,7 @@ import {
 	Notice,
 	Plugin,
 	TFile,
+	EditorChange,
 } from 'obsidian'
 
 import { OutlineView, VIEW_TYPE } from './view'
@@ -60,7 +61,7 @@ export class QuietOutline extends Plugin {
 		})
 
 		this.addCommand({
-			id: "quiet-outline-reset",
+			id: "quiet-remove-all-headers",
 			name: "remove all headers",
 			callback: () => {
 				this.removeAllHeadersNumber();
@@ -109,9 +110,34 @@ export class QuietOutline extends Plugin {
 	}
 
 	async removeAllHeadersNumber(){
-		let content = await this.app.vault.read(this.app.workspace.getActiveFile());
-		content = content.replace(/^ *(#+ ) *(\d+\.)*\d* */gm, "$1");
-		await this.app.vault.modify(this.app.workspace.getActiveFile(), content);
+		const cFile = this.app.workspace.getActiveFile();
+		if (!cFile) return;
+		const headings = this.app.metadataCache.getFileCache(cFile)?.headings;
+		const editor = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor
+		if (!headings || !editor) return;
+		const changes: EditorChange[] = [];
+		headings.forEach(element => {
+			const headerNumLength = element.heading.match(/^(\d+\.)*\d* */gm)?.at(0).length;
+			const lineNum = element.position.start.line;
+			if (headerNumLength) {
+				changes.push({
+					text: '',
+					from: {
+						line: lineNum,
+						ch: element.position.end.col - element.heading.length
+					},
+					to: {
+						line: lineNum,
+						ch: element.position.end.col - element.heading.length + headerNumLength
+					}
+				});
+			}
+		});
+		if (changes.length !== 0) {
+			editor.transaction({
+				changes: changes
+			})
+		}
 		new Notice("remove headers number finished");
 	}
 

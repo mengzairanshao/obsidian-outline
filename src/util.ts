@@ -53,8 +53,9 @@ export function calcHeaderStr(headCount: number[], currentLevel: number): string
 export function getNearestHeader(firstLine: number):string {
     if (!store.headers) return;
     for (var i = store.headers.length - 1; i >= 0; i--) {
-        if (firstLine > store.headers[i].position.start.line) {
-            var headerStr = store.line2HeaderNumMap?.line2HeaderNumMap?.get(store.headers[i].position.start.line);
+        var line = store.headers[i].position.start.line;
+        if (firstLine > line) {
+            var headerStr = store.line2HeaderNumMap?.line2HeaderNumMap?.get(line);
             if (headerStr) {
                 return headerStr;
             }
