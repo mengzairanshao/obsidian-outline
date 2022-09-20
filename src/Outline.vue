@@ -66,14 +66,7 @@ let container =compomentSelf.appContext.config.globalProperties.container as HTM
 
 // register scroll event
 onMounted(() => {
-    document.addEventListener("scroll", handleScroll, true)
-	store.plugin.registerMarkdownPostProcessor(async (el, ctx)=> {
-		let ele = el.findAll("h1,h2,h3,h4,h5,h6");
-		ele.forEach((value, index, array)=>{
-			let head = store.line2HeaderNumMap.line2HeaderNumMap.get(ctx.getSectionInfo(value).lineStart);
-			if (head) value.setText(head + value.getText());
-		})
-	});
+    document.addEventListener("scroll", handleScroll, true);
 })
 
 onUnmounted(() => {
@@ -142,8 +135,8 @@ function _handleScroll(evt: Event) {
         setTimeout(() => {
             let curLocation = container.querySelector(`#no-${index}`)
             if (curLocation) {
-                curLocation.addClass("located")
-                curLocation.scrollIntoView({block: "center", behavior: "smooth"})
+                curLocation.addClass("located");
+                curLocation.scrollIntoView({block: "center", behavior: "smooth"});
             }
         },0)
     }

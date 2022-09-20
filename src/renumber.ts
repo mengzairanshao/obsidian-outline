@@ -31,7 +31,10 @@ class HeaderReNumPlugin implements PluginValue {
 		let header = [0,0,0,0,0,0];
 		let lastLine = -1;
 		const editor = view.state.field(editorViewField)?.editor;
-		if (!editor) return builder.finish();
+		if (!editor) {
+			console.log("editor is: ", editor);
+			return builder.finish();
+		}
 		const firstLineInView = editor.offsetToPos(view.viewport.from).line;
 		const firstHeaderInView = getNearestHeader(firstLineInView);
 		firstHeaderInView?.split(".").filter(e => e).map((e, i) => {

@@ -31,6 +31,14 @@ export class QuietOutline extends Plugin {
 			arrToTree(this.app.metadataCache.getFileCache(current_file).headings);
 		}
 
+		this.registerMarkdownPostProcessor(async (el, ctx)=> {
+			let ele = el.findAll("h1,h2,h3,h4,h5,h6");
+			ele.forEach((value, index, array)=>{
+				let head = store.line2HeaderNumMap.line2HeaderNumMap.get(ctx.getSectionInfo(value)?.lineStart);
+				if (head) value.setText(head + value.getText());
+			})
+		});
+
 		this.registerView(
 			VIEW_TYPE,
 			(leaf) => new OutlineView(leaf, this)
@@ -103,6 +111,11 @@ export class QuietOutline extends Plugin {
 			}
 		}))
 
+		this.registerEvent(this.app.workspace.on('css-change', () => {
+			console.log("css-change")
+			store.dark = document.querySelector('body').classList.contains('theme-dark')
+		}))
+
 		this.app.workspace.onLayoutReady(()=>{
 			this.activateView();
 		})
@@ -116,10 +129,12 @@ export class QuietOutline extends Plugin {
 		const editor = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor
 		if (!headings || !editor) return;
 		const changes: EditorChange[] = [];
+		const cs: number[] = [];
 		headings.forEach(element => {
 			const headerNumLength = element.heading.match(/^(\d+\.)*\d* */gm)?.at(0).length;
 			const lineNum = element.position.start.line;
 			if (headerNumLength) {
+				cs.push(lineNum);
 				changes.push({
 					text: '',
 					from: {
@@ -138,6 +153,7 @@ export class QuietOutline extends Plugin {
 				changes: changes
 			})
 		}
+		console.log("changes line:", ...cs);
 		new Notice("remove headers number finished");
 	}
 

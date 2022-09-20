@@ -68,6 +68,7 @@ export const remove_href = (token:marked.Token) => {
     }
 }
 
+// parse ==xxx== or **xxx** format
 export const highlight: Extension = {
     name: "highlight",
     level: "inline",
